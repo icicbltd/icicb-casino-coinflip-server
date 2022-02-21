@@ -43,6 +43,7 @@ gameSocket = io.on('connection', function (socket) {
     console.log(req.totalAmount);
     console.log(req);
     var Amount;
+    console.log(req.token);
     Amount = req.totalAmount;
     try {
       try {
