@@ -40,7 +40,6 @@ gameSocket = io.on('connection', function (socket) {
   });
   console.log("connected", socket.id);
   socket.on('bet info', async (req) => {
-    console.log(req.totalAmount);
     console.log(req);
     var Amount;
     console.log(req.token);
@@ -56,7 +55,6 @@ gameSocket = io.on('connection', function (socket) {
         throw new Error("0");
       }
       Amount -= req.betAmount;
-      console.log(1);
       users[req.token] = {
         sideFlag: 0,
         amount: Amount,
@@ -69,7 +67,6 @@ gameSocket = io.on('connection', function (socket) {
       }
       var user = users[req.token];
       isStarted = true;
-      console.log(isStarted);
       console.log(user.amount);
       betStart = { "amount": user.amount, "isStarted": isStarted }
 
@@ -89,6 +86,8 @@ gameSocket = io.on('connection', function (socket) {
       user.level++;
       user.earnAmount = user.odd * user.betAmount;
       user.gameResult = true;
+      user.userToken = req.token;
+      user.amount = req.totalAmount;
       betResult = {
         gameResult: user.gameResult,
         odd: user.odd,
@@ -101,6 +100,8 @@ gameSocket = io.on('connection', function (socket) {
       console.log(betResult);
     }
     else {
+      user.userToken = req.token;
+      user.amount = req.totalAmount;
       betResult = {
         gameResult: false,
         odd: 0,
@@ -118,21 +119,21 @@ gameSocket = io.on('connection', function (socket) {
   socket.on("cash out", async (req) => {
     console.log(req);
     var gameResult = [];
+    var user = users[req.token];
+    user.amount = req.totalAmount;
+    user.earnAmount = req.earnAmount;
+    user.amount += user.earnAmount;
     try {
-      var user = users[req.token];
-      user.amount = req.totalAmount;
-      user.amount += user.earnAmount;
-      console.log("1");
       try {
         await axios.post(process.env.PLATFORM_SERVER + "api/games/winlose", {
           token: req.token,
-          amount: user.amount,
+          amount: user.earnAmount,
+          winState: true
         });
       } catch (err) {
         console.log(err);
         throw new Error("1");
       }
-      console.log("1");
       gameResult = {
         amount: user.amount,
         earnAmount: user.earnAmount,
